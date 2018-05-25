@@ -11,7 +11,7 @@ import (
 
 type HandlerChain []http.Handler
 
-func (chain HandlerChain) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (chain HandlerChain) ServeHTTP(w http.ResponseWriter, req *http.Request) { //链式调用http.Handler
 	defer func() {
 		if r := recover(); r != nil {
 
@@ -58,7 +58,7 @@ var logger = log.NewLogger("rest.json")
 
 type t_JSON int
 
-func (f t_JSON) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (f t_JSON) ServeHTTP(w http.ResponseWriter, req *http.Request) { //链式处理最后一步，输出JSON响应
 	obj := context.Get(req, CTX_API_RESULT)
 
 	var err error
