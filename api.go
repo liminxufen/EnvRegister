@@ -9,6 +9,15 @@ import (
 	"github.com/gorilla/context"
 )
 
+func Apify(fun interface{}) http.Handler { //自定义handler,用于链式处理
+	return HandlerChain{
+		API,
+		APILOG,
+		rest.RPC(fun),
+		rest.JSON,
+	}
+}
+
 type HandlerChain []http.Handler
 
 func (chain HandlerChain) ServeHTTP(w http.ResponseWriter, req *http.Request) { //链式调用http.Handler
@@ -51,9 +60,53 @@ type APIReply struct {
 }
 
 
+// APILOG Handler.
+// 打印API的访问日志
+type t_APILOG int
+
+var logApi = log.NewLogger("rest.apilog")
+
+func (f t_APILOG) ServeHTTP(w http.ResponseWriter, req *http.Request) { //链式处理，打印API访问Log
+	loginName := ""
+	ui := GetUserInfo(req)
+	if ui != nil {
+		loginName = ui.LoginName
+	}
+
+	logApi.Infof("url=%s, loginName=%s, remoteAddr=%s", req.URL.RequestURI(), loginName, getRequestAddress(req))
+}
+
+func getRequestAddress(req *http.Request) string {
+	address := ""
+	forwardedfor := req.Header.Get("X-Forwarded-For")
+	if forwardedfor != "" {
+		parts := strings.Split(forwardedfor, ",")
+		if len(parts) >= 1 {
+			address = parts[0]
+		}
+	}
+	if address == "" {
+		address = req.RemoteAddr
+		i := strings.LastIndex(address, ":")
+		if i != -1 {
+			address = address[:i]
+		}
+	}
+	return address
+}
+const (
+	APILOG = t_APILOG(0) // APILOG Handler
+)
+
+//OAAUTH API
+type t_OAAUTH int
+func (f t_OAAUTH) ServeHTTP(w http.ResponseWriter, req *http.Request) { //链式处理，API鉴权
+	
+}
+API = t_OAAUTH()
+
 // JSON Handler.
 // 将context["API.RESULT"]中的数据以JSON(或JSONP)格式输出
-
 var logger = log.NewLogger("rest.json")
 
 type t_JSON int
@@ -78,7 +131,6 @@ func (f t_JSON) ServeHTTP(w http.ResponseWriter, req *http.Request) { //链式�
 		}
 	}
 }
-
 const (
 	JSON = t_JSON(0) // JSON输出Handler
 )
