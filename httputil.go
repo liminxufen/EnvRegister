@@ -19,8 +19,8 @@ import (
 )
 
 type httpConfigType struct {
-	BaseUrl     string   `desc:"基准url"`
-	ApiBase     string   `desc:"API前缀"`
+	BaseUrl     string   `desc:"基准url"`  //HOST
+	ApiBase     string   `desc:"API前缀"`  //
 	Bind        string   `desc:"监听地址"`
 	Https       bool     `desc:"是否启用https"`
 	CrtFile     string   `desc:"https certificate file"`
@@ -30,8 +30,8 @@ type httpConfigType struct {
 }
 
 var (
-	HttpPathPrefix string // HTTP基准路径
-	Router         *mux.Router
+	HttpPathPrefix string // HTTP基准路径前缀
+	Router         *mux.Router //全局路由器
 	BaseUrl        string
 )
 
@@ -83,10 +83,10 @@ func (this *httpConfigType) Init() error {
 	return nil
 }
 
-func HandleStatic(urlPrefix, relPath string) {
+func HandleStatic(urlPrefix, relPath string) {  //API 处理静态文件函数
 	absPath := relPath
-	if !strings.HasPrefix(relPath, "/") {
-		absPath = path.Clean(path.Join(env.BasePath, relPath))
+	if !strings.HasPrefix(relPath, "/") {  //若为相对路径
+		absPath = path.Clean(path.Join(env.BasePath, relPath)) /env.BasePath定义为程序运行目录的上级目录
 	}
 	fs0 := http.FileServer(http.Dir(absPath))
 	n := len(urlPrefix)
@@ -126,7 +126,7 @@ func fixXUACompatible(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-UA-Compatible", "IE=edge,chrome=1")
 }
 
-func staticAUTHFilter(h http.Handler) http.Handler {
+func staticAUTHFilter(h http.Handler) http.Handler {  //静态文件鉴权过滤Handler
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		match := false
 		for _, pa := range httpConfig.StaticAuths {
