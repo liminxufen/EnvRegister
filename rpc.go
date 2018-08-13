@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/schema"
 	"net/http"
 	"reflect"
+	"runtime"
 	"time"
 	"unicode"
 	"unicode/utf8"
@@ -274,4 +275,27 @@ func convertTime(s string) reflect.Value {
 func decodeQueryParams(req *http.Request, arg interface{}) error {
 	req.FormValue("") // 触发ParseForm
 	return decoder.Decode(arg, req.Form)
+}
+
+//-----------------------------
+func panicMsg(msg string) {
+	name, file, line, ok := callerName(1)
+	if !ok {
+		panic("Err: panicMsg(): call callerInfo() failed!!!")
+	}
+	//拼装返回
+	formatStr := "%s [Err] (%s:%d) \n\t\t %s(): %s\n"
+	dateTime := time.Now().Format("2006-01-02 15:04:05")
+	ret := fmt.Sprintf(formatStr, dateTime, file, line, name, msg)
+	panic(ret)
+}
+
+//函数 CallerName 返回调用者的函数名/文件名/行号等用户友好的信息.
+func callerName(skip int) (name, file string, line int, ok bool) {
+	var pc uintptr
+	if pc, file, line, ok = runtime.Caller(skip + 1); !ok {
+		return
+	}
+	name = runtime.FuncForPC(pc).Name()
+	return
 }
