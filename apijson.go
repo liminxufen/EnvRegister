@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"tusk/env"
-	"tusk/errutil"
+	"../env"
+	"../errutil"
 )
 
 const (
