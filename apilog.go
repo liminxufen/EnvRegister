@@ -3,8 +3,8 @@ package httputil
 import (
 	"net/http"
 	"strings"
-	"tusk/acl"
-	"tusk/log"
+	"auth/acl"
+	"../log"
 )
 
 // APILOG Handler.
