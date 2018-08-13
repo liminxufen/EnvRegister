@@ -31,11 +31,25 @@ func (f InitFunc) Init() error {
 	return f()
 }
 
+type LogConfig struct {
+	LogFilePath string `desc: "日志路径"`		
+	DebugOpen   bool   `desc: "开启DEBUG模式（输出日志到终端）`
+}
+
+func (config *LogConfig) Init() error {
+	log.Init(logConfig.LogFilePath, logConfig.DebugOpen)	
+	return nil
+}
+	
 var (
 	tomlConfigMaps = make(map[string]interface{})
 	initializers   []Initializer
 
 	once sync.Once
+	logConfig = &LogConfig{
+		LogFilePath: "/tmp/tusk.log",	
+		DebugOpen:   false,
+	}
 )
 
 /*
@@ -63,18 +77,18 @@ var (
   }
 
 */
-func Register(sectionName string, config interface{}) {
+func Register(sectionName string, config interface{}) {  //注册一般interface
 	tomlConfigMaps[sectionName] = config
-	if initializer, ok := config.(Initializer); ok {
+	if initializer, ok := config.(Initializer); ok {  //若实现Initializer,则追加
 		initializers = append(initializers, initializer)
 	}
 }
 
-func RegisterInitializer(initializer Initializer) {
+func RegisterInitializer(initializer Initializer) { //注册实现了Initializer的interface
 	initializers = append(initializers, initializer)
 }
 
-func RegisterInitFunc(fun InitFunc) {
+func RegisterInitFunc(fun InitFunc) {  //注册实现Initializer的func
 	RegisterInitializer(fun)
 }
 
@@ -142,7 +156,7 @@ func indirect(v reflect.Value) reflect.Value {
 }
 
 // 显示当前所有配置项
-func Help(serverName, configName string) {
+func Help(serverName, configName string) {  //svr类型、dev/prod类型
 
 	fullPath, _ := filepath.Abs(os.Args[0]) //获取程序运行绝对路径
 	curDir := path.Dir(fullPath)
@@ -248,7 +262,7 @@ func InitEnv(serverName string) {
 		configName = "dev"
 		if len(os.Args) > 2 {
 			configName = os.Args[2]
-			Help(serverName, configName)
+			Help(serverName, configName)  //实际调用注册环境
 			os.Exit(0)
 		}
 	}
