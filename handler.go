@@ -3,7 +3,7 @@ package httputil
 import (
 	"fmt"
 	"net/http"
-	"tusk/acl"
+	"../acl"
 )
 
 type HandlerChain []http.Handler
