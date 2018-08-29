@@ -17,7 +17,7 @@ func (chain HandlerChain) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			case http.Handler: // 如果err对象实现了http.Handler接口，则调用其输出函数。
 				v.ServeHTTP(w, req)
 			case error: // 普通err对象，打印出stack trace.
-				msg := fmt.Sprintf("Internal Server Error: %s", v.Error())
+				msg := fmt.Sprintf("Internal Server or Params Error: %s", v.Error())
 				http.Error(w, msg, http.StatusInternalServerError)
 			}
 		}
