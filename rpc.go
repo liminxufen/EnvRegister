@@ -84,7 +84,7 @@ type jsonRpc struct {
 //      Bar string `schema:"bar"`
 //   }
 
-func RPC(fun interface{}) http.Handler {
+func SchemaRPC(fun interface{}) http.Handler {
 	funv := reflect.ValueOf(fun)
 	funType := funv.Type()
 	if funv.Kind() != reflect.Func {
