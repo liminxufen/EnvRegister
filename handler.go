@@ -44,3 +44,20 @@ func JsonApify(fun interface{}) http.Handler { //创建免鉴权Json格式链式
 		JSON,
 	}
 }
+
+func SchemaAuthApify(fun interface{}) http.Handler { //创建鉴权Schema格式链式Handler
+	return HandlerChain{	
+		acl.APIAUTH,
+		APILOG,
+		SchemaRPC(fun),
+		JSON,
+	}
+}
+
+func SchemaApify(fun interface{}) http.Handler { //创建免鉴权Schema格式链式Handler
+	return HandlerChain{	
+		APILOG,
+		SchemaRPC(fun),
+		JSON,
+	}
+}
