@@ -1,0 +1,69 @@
+---
+- hosts: localhost
+  vars:
+      build_dir: '/tmp/build_{{ project }}'
+
+  tasks:
+    - name: clear tmp file
+      file:
+        path: '/tmp/{{ project }}'
+        state: absent
+
+    - name: clear tmp build file
+      file:
+        path: '{{ build_dir }}'
+        state: absent
+
+    - name: clone code
+      git:
+        repo: http://******/***/executor.git
+        dest: '/tmp/{{ project }}/src/***/***/executor'
+        version: '{{ check_out }}'
+        depth: 10
+
+    - name: building
+      shell: |
+             export GOPATH=/tmp/{{project}}
+             git fetch --depth=500 && gopack -n {{ project }} -u {{ build_dir }}
+      args:
+         chdir: '/tmp/{{ project }}/src/****/****/executor/cmd/{{ project }}'
+
+
+- hosts: '{{ target }}'
+  vars:
+    user: 'root'
+    build_dir: '/tmp/build_{{ project }}'
+    deploy_dir: '/tmp/deploy_{{ project }}'
+
+  tasks:
+    - name: judge domain name for ajs server
+      shell: sed -n '/ip\ domain/p' /etc/hosts |wc -l
+      register: install
+
+    - name: write domain name for ajs server
+      shell: echo "ip domain" >> /etc/hosts
+      when: install.stdout|int==0
+
+    - name: remove dir
+      shell: rm -rf {{ deploy_dir }} || /bin/true
+
+    - name: transfer build rpm
+      copy:
+        src: "{{ build_dir }}"
+        dest: "{{ deploy_dir }}"
+
+    - name:
+      shell: find .  -name "*.amd64.rpm" -exec rpm -ivh --force {} \;
+      args:
+        chdir: '{{ deploy_dir }}'
+
+    - name: copy config
+      copy:
+        src: '/tmp/{{ project }}/src/***/***/executor/configs/{{ project }}-{{ release }}.yml'
+        dest: '/data/apps/{{ project }}/conf/{{ project }}.yml'
+
+    - name: restart servervice
+      shell: setsid service {{ project }} restart
+      register: restart_service
+
+    - debug: msg="{{ restart_service }}"
